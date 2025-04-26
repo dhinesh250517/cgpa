@@ -29,7 +29,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   });
 
   useEffect(() => {
-    // Check for existing session on component mount
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       setAuthState({
@@ -40,19 +39,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, this would be an API call to authenticate
     try {
       const usersJson = localStorage.getItem('users');
       const users: User[] = usersJson ? JSON.parse(usersJson) : [];
       
-      const user = users.find(
-        (u) => u.email === email && u.password === password
-      );
+      const user = users.find(u => u.email === email);
       
-      if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
+      if (user && user.password === password) {
+        const { password: _, ...userWithoutPassword } = user;
+        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
         setAuthState({
-          user,
+          user: userWithoutPassword,
           isAuthenticated: true,
         });
         return true;
@@ -65,7 +62,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signup = async (userData: Omit<User, 'id'>): Promise<boolean> => {
-    // In a real app, this would be an API call to register
     try {
       const usersJson = localStorage.getItem('users');
       const users: User[] = usersJson ? JSON.parse(usersJson) : [];
@@ -87,9 +83,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('users', JSON.stringify(users));
       
       // Auto login the new user
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
+      const { password: _, ...userWithoutPassword } = newUser;
+      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
       setAuthState({
-        user: newUser,
+        user: userWithoutPassword,
         isAuthenticated: true,
       });
       
